@@ -1,14 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
 
-export const completeText = async (currentText: string): Promise<string> => {
-  if (!process.env.API_KEY) {
-    console.warn("API_KEY not found in environment variables.");
-    return " [AI Config Missing] ";
+export const completeText = async (currentText: string, apiKey?: string): Promise<string> => {
+  const keyToUse = apiKey || process.env.API_KEY;
+
+  if (!keyToUse) {
+    console.warn("API_KEY not found.");
+    return "";
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
+    const ai = new GoogleGenAI({ apiKey: keyToUse });
+
     // We want a subtle completion, not a full novel.
     const prompt = `
       You are a ghostwriter inside a typewriter. 
@@ -22,7 +24,7 @@ export const completeText = async (currentText: string): Promise<string> => {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       contents: prompt,
     });
 

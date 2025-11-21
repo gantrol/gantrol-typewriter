@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Keyboard } from './Keyboard';
 
+import { Theme } from './CheatSheet';
+
 interface TypewriterProps {
   activeKey: string | null;
   carriageOffset: number;
@@ -8,6 +10,7 @@ interface TypewriterProps {
   children: React.ReactNode;
   width: number;
   height: number;
+  theme?: Theme;
 }
 
 // Base dimensions of the visual assets
@@ -21,9 +24,46 @@ export const Typewriter: React.FC<TypewriterProps> = ({
   onKeyClick,
   children,
   width,
-  height
+  height,
+  theme = 'purple'
 }) => {
   const [hammerActive, setHammerActive] = useState(false);
+
+  // Theme Styles
+  const getThemeStyles = (t: Theme) => {
+    switch (t) {
+      case 'pink':
+        return {
+          cover: 'bg-pink-300 border-pink-400',
+          deck: 'bg-pink-400 border-pink-500 shadow-[0_30px_60px_rgba(131,24,67,0.3)]',
+          text: 'text-pink-900/40',
+          highlight: 'bg-white/20'
+        };
+      case 'blue':
+        return {
+          cover: 'bg-blue-300 border-blue-400',
+          deck: 'bg-blue-400 border-blue-500 shadow-[0_30px_60px_rgba(30,58,138,0.3)]',
+          text: 'text-blue-900/40',
+          highlight: 'bg-white/20'
+        };
+      case 'purple':
+      default:
+        // Keeping the original dark premium look for purple, or making it macaron?
+        // User said "Macaron purple". Let's try a lighter purple to match the set.
+        // BUT the original was "Deep purple hues". 
+        // Let's keep the original as a "Dark Mode" variant or just make it Macaron Purple?
+        // The user explicitly asked for "Macaron purple". I should probably make it pastel.
+        // However, the original design was nice. Let's try to make a nice pastel purple.
+        return {
+          cover: 'bg-purple-300 border-purple-400',
+          deck: 'bg-purple-400 border-purple-500 shadow-[0_30px_60px_rgba(88,28,135,0.3)]',
+          text: 'text-purple-900/40',
+          highlight: 'bg-white/20'
+        };
+    }
+  };
+
+  const styles = getThemeStyles(theme as Theme);
 
   // Determine layout mode
   const isMobile = width < 850;
@@ -52,10 +92,6 @@ export const Typewriter: React.FC<TypewriterProps> = ({
   const keyboardAssemblyHeight = isLandscape ? 280 : 612; // 612 = 140(cover) + 480(deck) - overlap
   const keyboardVisualHeight = keyboardAssemblyHeight * activeScaleKey;
 
-  // Anchor carriage to the keyboard top to prevent gaps
-  // The desktop layout has the keyboard starting at 420px relative to carriage top
-  // So: CarriageTop = KeyboardTop - (420 * CarriageScale)
-  // KeyboardTop = ScreenHeight - KeyboardVisualHeight
   // Anchor carriage to the keyboard top to prevent gaps
   // The desktop layout has the keyboard starting at 420px relative to carriage top
   // So: CarriageTop = KeyboardTop - (420 * CarriageScale)
@@ -146,21 +182,21 @@ export const Typewriter: React.FC<TypewriterProps> = ({
     <div className="relative">
       {/* Top Cover - Only show nicely on desktop or portrait mobile if enough space */}
       {(!isMobile || !isLandscape) && (
-        <div className="w-[900px] h-[140px] bg-violet-900 rounded-t-[50px] shadow-2xl mx-auto relative overflow-hidden border-t border-violet-600/30">
-          <div className="absolute top-6 w-full text-center text-violet-200/40 font-serif tracking-[0.5em] text-lg font-bold">GANTROL'S TYPEWRITER</div>
-          <div className="absolute top-0 right-32 w-56 h-full bg-white/5 skew-x-12 blur-2xl"></div>
+        <div className={`w-[900px] h-[140px] ${styles.cover} rounded-t-[50px] shadow-2xl mx-auto relative overflow-hidden border-t border-white/20`}>
+          <div className={`absolute top-6 w-full text-center ${styles.text} font-serif tracking-[0.5em] text-lg font-bold`}>GANTROL'S TYPEWRITER</div>
+          <div className={`absolute top-0 right-32 w-56 h-full ${styles.highlight} skew-x-12 blur-2xl`}></div>
         </div>
       )}
       {/* Keyboard Deck */}
       <div
         className={`
-            w-[1000px] bg-[#1e1b4b] shadow-[0_30px_60px_rgba(0,0,0,0.6)] border-[#0f0e24] relative
+            w-[1000px] ${styles.deck} relative
             ${(!isMobile || !isLandscape) ? 'rounded-[40px] -mt-8 border-b-[16px] p-8' : 'rounded-t-[30px] border-b-0 p-4'}
             ${(isMobile && isLandscape) ? 'h-[280px] pt-4' : ''}
             ${(isMobile && !isLandscape) ? 'h-[480px] pt-6' : 'h-[360px]'} 
           `}
       >
-        <Keyboard activeKey={activeKey} onKeyClick={onKeyClick} compact={isMobile} />
+        <Keyboard activeKey={activeKey} onKeyClick={onKeyClick} compact={isMobile} theme={theme} />
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { Theme } from './CheatSheet';
 
 interface KeyboardProps {
   activeKey: string | null;
-  onKeyClick: (key: string) => void;
+  onKeyClick: (key: string, isCtrl?: boolean) => void;
   compact?: boolean;
+  theme?: Theme;
 }
 
 type KeyDefinition = {
@@ -78,15 +80,26 @@ const ROW_3: KeyDefinition[] = [
   { label: 'SHIFT', val: 'Shift', width: 'w-24', type: 'action' },
 ];
 
-export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compact = false }) => {
+export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compact = false, theme = 'purple' }) => {
   const [isShiftLocked, setIsShiftLocked] = useState(false);
   const [isCapsLocked, setIsCapsLocked] = useState(false);
   const [isCtrlLocked, setIsCtrlLocked] = useState(false);
 
+  // Theme-based active colors
+  const getActiveColor = (t: Theme) => {
+    switch (t) {
+      case 'pink': return 'text-pink-200';
+      case 'blue': return 'text-blue-200';
+      case 'purple': default: return 'text-purple-200';
+    }
+  };
+
+  const activeTextColor = getActiveColor(theme as Theme);
+
   const handleKeyClick = (keyDef: KeyDefinition) => {
     if (keyDef.val === 'Shift') {
       setIsShiftLocked(!isShiftLocked);
-      onKeyClick('Shift'); // For visual feedback/sound
+      onKeyClick('Shift');
       return;
     }
 
@@ -104,26 +117,19 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
       if (keyDef.shiftVal) {
         valToSend = keyDef.shiftVal;
       } else if (keyDef.val.length === 1 && keyDef.val.match(/[a-z]/)) {
-        // Shift overrides Caps, or inverts it. Standard behavior: Shift+Caps = lower.
         valToSend = isCapsLocked ? keyDef.val.toLowerCase() : keyDef.val.toUpperCase();
       }
     } else {
-      // No Shift, check Caps
       if (isCapsLocked && keyDef.val.length === 1 && keyDef.val.match(/[a-z]/)) {
         valToSend = keyDef.val.toUpperCase();
       }
     }
 
+    // Pass isCtrlLocked state
     onKeyClick(valToSend, isCtrlLocked);
-
-    // Keep Sticky Shift behavior for ease of use on mobile/mouse
-    if (isShiftLocked && keyDef.val !== 'Shift') {
-      // Optional: setIsShiftLocked(false); 
-    }
   };
 
   const renderKey = (k: KeyDefinition, index: number) => {
-    // Check if this key is "active"
     const isShift = activeKey === 'shift';
     const isActive =
       activeKey === k.val ||
@@ -136,18 +142,10 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
     const currentLabel = (isShiftLocked || isShift) && k.shiftLabel ? k.shiftLabel : k.label;
     const isAction = k.type === 'action';
 
-    // Dimensions
-    // If compact (mobile), we use taller keys (h-16) for better touch accuracy.
     const heightClass = compact ? 'h-[4.5rem]' : 'h-12 md:h-14';
-
-    // For compact mode, we'll use specific widths to fill space better if not action
     let widthClass = k.width || 'w-12 md:w-14';
-
-    // Tight margin for compact mode to fit more keys
     const marginClass = compact ? 'mx-[2px]' : 'mx-[3px]';
 
-    // Styles for roundness
-    // Action keys are now rounder (rounded-2xl instead of rounded-md)
     const outerRoundness = isAction ? 'rounded-2xl' : 'rounded-full';
     const innerRoundness = isAction ? 'rounded-xl' : 'rounded-full';
     const shadowRoundness = isAction ? 'rounded-2xl' : 'rounded-[40%]';
@@ -162,10 +160,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
         }}
         className={`relative ${widthClass} ${heightClass} flex justify-center items-center group cursor-pointer ${marginClass} touch-manipulation`}
       >
-        {/* 1. Base Shadow/Hole */}
         <div className={`absolute inset-1 bg-black/60 blur-[2px] translate-y-2 ${shadowRoundness}`}></div>
-
-        {/* 2. Metal Ring / Plunger */}
         <div
           className={`
                 absolute w-full h-full 
@@ -177,26 +172,25 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
                 ${isActive ? 'translate-y-[5px] shadow-[0_0_0_#334155]' : 'translate-y-0'}
             `}
         >
-          {/* 3. Key Cap */}
           <div className={`
                 absolute inset-[3px] 
                 ${innerRoundness}
                 bg-[#1a1a1a] border-[1px] border-white/20 shadow-inner 
                 flex items-center justify-center overflow-hidden
             `}>
-
-            {/* Gloss */}
             <div className={`absolute top-0 w-full h-1/2 bg-white/10 blur-[1px] ${glossRoundness}`}></div>
-
-            {/* Label */}
             <span className={`
                     z-10 font-typewriter font-bold text-[#e2e8f0] select-none
                     ${isAction ? 'text-xs tracking-widest' : 'text-xl'}
-                    ${isActive ? 'text-purple-200' : ''}
+                    ${isActive ? activeTextColor : ''}
                     transition-colors
                 `}>
               {currentLabel}
             </span>
+            {/* Indicator Light for Shift/Caps */}
+            {((k.val === 'Shift' && isShiftLocked) || (k.val === 'CapsLock' && isCapsLocked)) && (
+              <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_#4ade80]"></div>
+            )}
           </div>
         </div>
       </div>
@@ -208,22 +202,18 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
 
   return (
     <div className="flex flex-col items-center gap-3 mt-2 select-none w-full">
-      {/* Row 1: Numbers */}
       <div className="flex justify-center">
         {ROW_NUM.map(renderKey)}
       </div>
 
-      {/* Row 2: QWERTY */}
       <div className="flex justify-center pl-4">
         {ROW_1.map(renderKey)}
       </div>
 
-      {/* Row 3: ASDF */}
       <div className="flex justify-center pl-6">
         {ROW_2.map(renderKey)}
       </div>
 
-      {/* Row 4: ZXCV */}
       <div className="flex justify-center">
         {ROW_3.map(renderKey)}
       </div>
@@ -261,7 +251,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
               <div className="absolute top-0 w-full h-1/2 bg-white/10 rounded-t-xl blur-[1px]"></div>
               <span className={`
                         z-10 font-typewriter font-bold text-[#e2e8f0] select-none text-xs tracking-widest
-                        ${isCtrlActive ? 'text-purple-200' : ''}
+                        ${isCtrlActive ? activeTextColor : ''}
                     `}>
                 CTRL
               </span>
