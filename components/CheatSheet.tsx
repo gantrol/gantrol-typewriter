@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-export type Theme = 'purple' | 'pink' | 'blue';
+export type Theme = 'purple' | 'pink' | 'blue' | 'deep-purple';
 
 interface CheatSheetProps {
     apiKey: string;
@@ -85,6 +85,11 @@ export const CheatSheet: React.FC<CheatSheetProps> = ({ apiKey, setApiKey, theme
                         <div>
                             <h3 className="font-bold text-lg border-b border-stone-300 mb-2 pb-1">Theme</h3>
                             <div className="flex gap-2">
+                                <button
+                                    onClick={() => handleSetTheme('deep-purple')}
+                                    className={`w-8 h-8 rounded-full bg-purple-900 border-2 ${theme === 'deep-purple' ? 'border-stone-800 scale-110' : 'border-transparent'}`}
+                                    title="Deep Purple"
+                                ></button>
                                 <button
                                     onClick={() => handleSetTheme('purple')}
                                     className={`w-8 h-8 rounded-full bg-purple-300 border-2 ${theme === 'purple' ? 'border-stone-800 scale-110' : 'border-transparent'}`}

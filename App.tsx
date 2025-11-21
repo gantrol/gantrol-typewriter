@@ -59,7 +59,7 @@ export default function App() {
 
   // Settings
   const [apiKey, setApiKey] = useState('');
-  const [theme, setTheme] = useState<Theme>('purple');
+  const [theme, setTheme] = useState<Theme>('deep-purple');
   const [showPaperList, setShowPaperList] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 

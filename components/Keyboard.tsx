@@ -90,6 +90,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
     switch (t) {
       case 'pink': return 'text-pink-200';
       case 'blue': return 'text-blue-200';
+      case 'deep-purple': return 'text-purple-500';
       case 'purple': default: return 'text-purple-200';
     }
   };

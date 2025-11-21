@@ -46,14 +46,15 @@ export const Typewriter: React.FC<TypewriterProps> = ({
           text: 'text-blue-900/40',
           highlight: 'bg-white/20'
         };
+      case 'deep-purple':
+        return {
+          cover: 'bg-purple-900 border-purple-950',
+          deck: 'bg-purple-950 border-purple-950 shadow-[0_30px_60px_rgba(0,0,0,0.5)]',
+          text: 'text-purple-200/40',
+          highlight: 'bg-white/5'
+        };
       case 'purple':
       default:
-        // Keeping the original dark premium look for purple, or making it macaron?
-        // User said "Macaron purple". Let's try a lighter purple to match the set.
-        // BUT the original was "Deep purple hues". 
-        // Let's keep the original as a "Dark Mode" variant or just make it Macaron Purple?
-        // The user explicitly asked for "Macaron purple". I should probably make it pastel.
-        // However, the original design was nice. Let's try to make a nice pastel purple.
         return {
           cover: 'bg-purple-300 border-purple-400',
           deck: 'bg-purple-400 border-purple-500 shadow-[0_30px_60px_rgba(88,28,135,0.3)]',
