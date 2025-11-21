@@ -47,6 +47,22 @@ export const Typewriter: React.FC<TypewriterProps> = ({
   const activeScaleKey = isMobile ? (isLandscape ? mobileLandscapeKeyboardScale : mobilePortraitKeyboardScale) : desktopScale;
   const activeScaleCarriage = isMobile ? (isLandscape ? mobileLandscapeCarriageScale : mobilePortraitCarriageScale) : desktopScale;
 
+  // Dynamic Carriage Positioning for Mobile Layouts
+  const mobileKeyboardVisualHeight = (isLandscape ? 280 : 400) * activeScaleKey;
+  const availableHeight = height - mobileKeyboardVisualHeight;
+  const carriageVisualHeight = 450 * activeScaleCarriage; // Approx visual height of carriage block
+
+  let mobileCarriageTop = 0;
+  if (isLandscape) {
+    mobileCarriageTop = -20;
+  } else {
+    // Portrait: Center vertically in available space
+    // This fixes overlap on small tablets and gaps on large tablets (iPad)
+    const centeredTop = (availableHeight - carriageVisualHeight) / 2;
+    // Clamp to reasonable bounds (min 20px from top, max 160px to avoid floating too low)
+    mobileCarriageTop = Math.max(20, Math.min(160, centeredTop));
+  }
+
   useEffect(() => {
     if (activeKey) {
       setHammerActive(true);
@@ -151,11 +167,11 @@ export const Typewriter: React.FC<TypewriterProps> = ({
         
         {/* Top Section: Carriage */}
         <div 
-          className="absolute top-0 left-1/2 w-[1100px] origin-top flex justify-center pt-10 pointer-events-none"
+          className="absolute left-1/2 w-[1100px] origin-top flex justify-center pt-10 pointer-events-none"
           style={{ 
              transform: `translateX(-50%) scale(${activeScaleCarriage})`,
-             // In landscape, pull it up. In portrait, adjust to prevent overlap or large gap.
-             top: isLandscape ? '-20px' : '160px' 
+             // Use dynamic top to position carriage
+             top: `${mobileCarriageTop}px` 
           }}
         >
            <div className="pointer-events-auto">

@@ -43,6 +43,14 @@
       .cursor-blink {
         animation: blink 1s step-end infinite;
       }
+
+      @keyframes scanner {
+        0% { transform: translateX(-150%); }
+        100% { transform: translateX(350%); }
+      }
+      .animate-scanner {
+        animation: scanner 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
     </style>
   <script type="importmap">
 {

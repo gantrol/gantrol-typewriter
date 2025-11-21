@@ -80,6 +80,7 @@ const ROW_3: KeyDefinition[] = [
 
 export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compact = false }) => {
   const [isShiftLocked, setIsShiftLocked] = useState(false);
+  const [isCapsLocked, setIsCapsLocked] = useState(false);
 
   const handleKeyClick = (keyDef: KeyDefinition) => {
     if (keyDef.val === 'Shift') {
@@ -89,21 +90,27 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
     }
 
     if (keyDef.val === 'CapsLock') {
-        // Just visual/sound for now
+        setIsCapsLocked(!isCapsLocked);
         onKeyClick('CapsLock');
         return;
     }
 
     // Determine value to send
     let valToSend = keyDef.val;
-    if (isShiftLocked) {
+    const isShiftActive = isShiftLocked || activeKey === 'shift';
+
+    if (isShiftActive) {
        if (keyDef.shiftVal) {
          valToSend = keyDef.shiftVal;
        } else if (keyDef.val.length === 1 && keyDef.val.match(/[a-z]/)) {
-         valToSend = keyDef.val.toUpperCase();
+         // Shift overrides Caps, or inverts it. Standard behavior: Shift+Caps = lower.
+         valToSend = isCapsLocked ? keyDef.val.toLowerCase() : keyDef.val.toUpperCase();
        }
-    } else if (activeKey === 'shift') { 
-       // Handling physical shift held down
+    } else {
+       // No Shift, check Caps
+       if (isCapsLocked && keyDef.val.length === 1 && keyDef.val.match(/[a-z]/)) {
+          valToSend = keyDef.val.toUpperCase();
+       }
     }
 
     onKeyClick(valToSend);
@@ -121,6 +128,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
         activeKey === k.val || 
         (k.val.length === 1 && activeKey === k.val.toLowerCase()) ||
         (k.val === 'Shift' && (activeKey === 'shift' || isShiftLocked)) ||
+        (k.val === 'CapsLock' && (activeKey === 'capslock' || isCapsLocked)) ||
         (k.val === 'Enter' && activeKey === 'enter') ||
         (k.val === 'Backspace' && activeKey === 'backspace');
 
@@ -129,7 +137,6 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
     
     // Dimensions
     // If compact (mobile), we use taller keys (h-16) for better touch accuracy.
-    // We also use percentage-ish width logic via scale, but here we set base sizes.
     const heightClass = compact ? 'h-[4.5rem]' : 'h-12 md:h-14';
     
     // For compact mode, we'll use specific widths to fill space better if not action
@@ -137,6 +144,13 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
     
     // Tight margin for compact mode to fit more keys
     const marginClass = compact ? 'mx-[2px]' : 'mx-[3px]';
+
+    // Styles for roundness
+    // Action keys are now rounder (rounded-2xl instead of rounded-md)
+    const outerRoundness = isAction ? 'rounded-2xl' : 'rounded-full';
+    const innerRoundness = isAction ? 'rounded-xl' : 'rounded-full';
+    const shadowRoundness = isAction ? 'rounded-2xl' : 'rounded-[40%]';
+    const glossRoundness = innerRoundness === 'rounded-full' ? 'rounded-t-full' : 'rounded-t-xl';
 
     return (
       <div 
@@ -152,13 +166,13 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
         className={`relative ${widthClass} ${heightClass} flex justify-center items-center group cursor-pointer ${marginClass} touch-manipulation`}
       >
         {/* 1. Base Shadow/Hole */}
-        <div className={`absolute inset-1 bg-black/60 rounded-[40%] blur-[2px] translate-y-2 ${isAction ? 'rounded-md' : ''}`}></div>
+        <div className={`absolute inset-1 bg-black/60 blur-[2px] translate-y-2 ${shadowRoundness}`}></div>
 
         {/* 2. Metal Ring / Plunger */}
         <div 
             className={`
                 absolute w-full h-full 
-                ${isAction ? 'rounded-md' : 'rounded-full'}
+                ${outerRoundness}
                 bg-gradient-to-br from-slate-300 via-slate-100 to-slate-400
                 shadow-[0_4px_0_#334155]
                 transition-transform duration-[50ms] ease-out
@@ -169,13 +183,13 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
             {/* 3. Key Cap */}
             <div className={`
                 absolute inset-[3px] 
-                ${isAction ? 'rounded-sm' : 'rounded-full'}
+                ${innerRoundness}
                 bg-[#1a1a1a] border-[1px] border-white/20 shadow-inner 
                 flex items-center justify-center overflow-hidden
             `}>
                 
                 {/* Gloss */}
-                <div className="absolute top-0 w-full h-1/2 bg-white/10 rounded-t-full blur-[1px]"></div>
+                <div className={`absolute top-0 w-full h-1/2 bg-white/10 blur-[1px] ${glossRoundness}`}></div>
 
                 {/* Label */}
                 <span className={`
@@ -191,6 +205,8 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
       </div>
     );
   };
+
+  const isSpaceActive = activeKey === ' ';
 
   return (
     <div className="flex flex-col items-center gap-3 mt-2 select-none w-full">
@@ -225,18 +241,33 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
             onKeyClick(' ');
         }}
         className={`
-          mt-3 w-[90%] max-w-[400px] h-14 rounded-md cursor-pointer z-20
-          bg-gradient-to-b from-zinc-800 to-black
-          border-b-[6px] border-r-[2px] border-l-[2px] border-zinc-900
-          shadow-xl relative overflow-hidden touch-manipulation
-          transition-all duration-[50ms] ease-out
-          active:border-b-0 active:translate-y-[6px] active:shadow-none
-          ${activeKey === ' ' ? 'border-b-0 translate-y-[6px] shadow-none' : ''}
+          mt-3 w-[90%] max-w-[400px] h-14 relative flex justify-center items-center group cursor-pointer touch-manipulation
         `}
       >
-        {/* Texture/Glare */}
-        <div className="absolute top-1 left-0 w-full h-[2px] bg-white/10"></div>
-        <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+         {/* 1. Base Shadow */}
+         <div className="absolute inset-1 bg-black/60 rounded-2xl blur-[2px] translate-y-2"></div>
+
+         {/* 2. Metal Ring */}
+         <div 
+            className={`
+                absolute w-full h-full rounded-2xl
+                bg-gradient-to-br from-slate-300 via-slate-100 to-slate-400
+                shadow-[0_4px_0_#334155]
+                transition-transform duration-[50ms] ease-out
+                z-10
+                ${isSpaceActive ? 'translate-y-[5px] shadow-[0_0_0_#334155]' : 'translate-y-0'}
+            `}
+         >
+            {/* 3. Key Cap */}
+            <div className={`
+                absolute inset-[3px] rounded-xl
+                bg-[#1a1a1a] border-[1px] border-white/20 shadow-inner 
+                flex items-center justify-center overflow-hidden
+            `}>
+                {/* Gloss */}
+                <div className="absolute top-0 w-full h-1/2 bg-white/10 rounded-t-xl blur-[1px]"></div>
+            </div>
+         </div>
       </div>
     </div>
   );
