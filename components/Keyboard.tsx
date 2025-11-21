@@ -97,6 +97,15 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
 
   const activeTextColor = getActiveColor(theme as Theme);
 
+  const keyThemeStyles: Record<string, { outer: string; inner: string; text: string }> = {
+    pink: { outer: 'from-pink-200 via-pink-50 to-pink-300', inner: 'bg-[#831843]', text: 'text-pink-100' },
+    blue: { outer: 'from-blue-200 via-blue-50 to-blue-300', inner: 'bg-[#172554]', text: 'text-blue-100' },
+    'deep-purple': { outer: 'from-slate-700 via-slate-600 to-slate-800', inner: 'bg-[#1e1b4b]', text: 'text-indigo-100' },
+    purple: { outer: 'from-purple-200 via-purple-50 to-purple-300', inner: 'bg-[#3b0764]', text: 'text-purple-100' }
+  };
+
+  const currentKeyTheme = keyThemeStyles[theme as string] || keyThemeStyles.purple;
+
   const handleKeyClick = (keyDef: KeyDefinition) => {
     if (keyDef.val === 'Shift') {
       setIsShiftLocked(!isShiftLocked);
@@ -166,7 +175,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
           className={`
                 absolute w-full h-full 
                 ${outerRoundness}
-                bg-gradient-to-br from-slate-300 via-slate-100 to-slate-400
+                bg-gradient-to-br ${currentKeyTheme.outer}
                 shadow-[0_4px_0_#334155]
                 transition-transform duration-[50ms] ease-out
                 z-10
@@ -176,12 +185,12 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
           <div className={`
                 absolute inset-[3px] 
                 ${innerRoundness}
-                bg-[#1a1a1a] border-[1px] border-white/20 shadow-inner 
+                ${currentKeyTheme.inner} border-[1px] border-white/20 shadow-inner 
                 flex items-center justify-center overflow-hidden
             `}>
             <div className={`absolute top-0 w-full h-1/2 bg-white/10 blur-[1px] ${glossRoundness}`}></div>
             <span className={`
-                    z-10 font-typewriter font-bold text-[#e2e8f0] select-none
+                    z-10 font-typewriter font-bold ${currentKeyTheme.text} select-none
                     ${isAction ? 'text-xs tracking-widest' : 'text-xl'}
                     ${isActive ? activeTextColor : ''}
                     transition-colors
@@ -237,7 +246,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
           <div
             className={`
                     absolute w-full h-full rounded-2xl
-                    bg-gradient-to-br from-slate-300 via-slate-100 to-slate-400
+                    bg-gradient-to-br ${currentKeyTheme.outer}
                     shadow-[0_4px_0_#334155]
                     transition-transform duration-[50ms] ease-out
                     z-10
@@ -246,12 +255,12 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
           >
             <div className={`
                     absolute inset-[3px] rounded-xl
-                    bg-[#1a1a1a] border-[1px] border-white/20 shadow-inner 
+                    ${currentKeyTheme.inner} border-[1px] border-white/20 shadow-inner 
                     flex items-center justify-center overflow-hidden
                 `}>
               <div className="absolute top-0 w-full h-1/2 bg-white/10 rounded-t-xl blur-[1px]"></div>
               <span className={`
-                        z-10 font-typewriter font-bold text-[#e2e8f0] select-none text-xs tracking-widest
+                        z-10 font-typewriter font-bold ${currentKeyTheme.text} select-none text-xs tracking-widest
                         ${isCtrlActive ? activeTextColor : ''}
                     `}>
                 CTRL
@@ -279,7 +288,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
           <div
             className={`
                     absolute w-full h-full rounded-2xl
-                    bg-gradient-to-br from-slate-300 via-slate-100 to-slate-400
+                    bg-gradient-to-br ${currentKeyTheme.outer}
                     shadow-[0_4px_0_#334155]
                     transition-transform duration-[50ms] ease-out
                     z-10
@@ -288,7 +297,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compa
           >
             <div className={`
                     absolute inset-[3px] rounded-xl
-                    bg-[#1a1a1a] border-[1px] border-white/20 shadow-inner 
+                    ${currentKeyTheme.inner} border-[1px] border-white/20 shadow-inner 
                     flex items-center justify-center overflow-hidden
                 `}>
               <div className="absolute top-0 w-full h-1/2 bg-white/10 rounded-t-xl blur-[1px]"></div>
