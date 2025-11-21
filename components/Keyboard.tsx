@@ -1,0 +1,243 @@
+import React, { useState } from 'react';
+
+interface KeyboardProps {
+  activeKey: string | null;
+  onKeyClick: (key: string) => void;
+  compact?: boolean;
+}
+
+type KeyDefinition = {
+  label: string;
+  val: string;
+  shiftLabel?: string;
+  shiftVal?: string;
+  width?: string; // Styling class for width
+  type?: 'standard' | 'action';
+};
+
+// Layout Data
+const ROW_NUM: KeyDefinition[] = [
+  { label: '1', val: '1', shiftLabel: '!', shiftVal: '!' },
+  { label: '2', val: '2', shiftLabel: '@', shiftVal: '@' },
+  { label: '3', val: '3', shiftLabel: '#', shiftVal: '#' },
+  { label: '4', val: '4', shiftLabel: '$', shiftVal: '$' },
+  { label: '5', val: '5', shiftLabel: '%', shiftVal: '%' },
+  { label: '6', val: '6', shiftLabel: '^', shiftVal: '^' },
+  { label: '7', val: '7', shiftLabel: '&', shiftVal: '&' },
+  { label: '8', val: '8', shiftLabel: '*', shiftVal: '*' },
+  { label: '9', val: '9', shiftLabel: '(', shiftVal: '(' },
+  { label: '0', val: '0', shiftLabel: ')', shiftVal: ')' },
+  { label: '-', val: '-', shiftLabel: '_', shiftVal: '_' },
+  { label: '=', val: '=', shiftLabel: '+', shiftVal: '+' },
+  { label: '←', val: 'Backspace', width: 'w-20', type: 'action' },
+];
+
+const ROW_1: KeyDefinition[] = [
+  { label: 'Q', val: 'q' },
+  { label: 'W', val: 'w' },
+  { label: 'E', val: 'e' },
+  { label: 'R', val: 'r' },
+  { label: 'T', val: 't' },
+  { label: 'Y', val: 'y' },
+  { label: 'U', val: 'u' },
+  { label: 'I', val: 'i' },
+  { label: 'O', val: 'o' },
+  { label: 'P', val: 'p' },
+  { label: '[', val: '[', shiftLabel: '{', shiftVal: '{' },
+  { label: ']', val: ']', shiftLabel: '}', shiftVal: '}' },
+];
+
+const ROW_2: KeyDefinition[] = [
+  { label: 'CAPS', val: 'CapsLock', width: 'w-20', type: 'action' },
+  { label: 'A', val: 'a' },
+  { label: 'S', val: 's' },
+  { label: 'D', val: 'd' },
+  { label: 'F', val: 'f' },
+  { label: 'G', val: 'g' },
+  { label: 'H', val: 'h' },
+  { label: 'J', val: 'j' },
+  { label: 'K', val: 'k' },
+  { label: 'L', val: 'l' },
+  { label: ';', val: ';', shiftLabel: ':', shiftVal: ':' },
+  { label: "'", val: "'", shiftLabel: '"', shiftVal: '"' },
+  { label: 'RETURN', val: 'Enter', width: 'w-28', type: 'action' },
+];
+
+const ROW_3: KeyDefinition[] = [
+  { label: 'SHIFT', val: 'Shift', width: 'w-24', type: 'action' },
+  { label: 'Z', val: 'z' },
+  { label: 'X', val: 'x' },
+  { label: 'C', val: 'c' },
+  { label: 'V', val: 'v' },
+  { label: 'B', val: 'b' },
+  { label: 'N', val: 'n' },
+  { label: 'M', val: 'm' },
+  { label: ',', val: ',', shiftLabel: '<', shiftVal: '<' },
+  { label: '.', val: '.', shiftLabel: '>', shiftVal: '>' },
+  { label: '/', val: '/', shiftLabel: '?', shiftVal: '?' },
+  { label: 'SHIFT', val: 'Shift', width: 'w-24', type: 'action' },
+];
+
+export const Keyboard: React.FC<KeyboardProps> = ({ activeKey, onKeyClick, compact = false }) => {
+  const [isShiftLocked, setIsShiftLocked] = useState(false);
+
+  const handleKeyClick = (keyDef: KeyDefinition) => {
+    if (keyDef.val === 'Shift') {
+      setIsShiftLocked(!isShiftLocked);
+      onKeyClick('Shift'); // For visual feedback/sound
+      return;
+    }
+
+    if (keyDef.val === 'CapsLock') {
+        // Just visual/sound for now
+        onKeyClick('CapsLock');
+        return;
+    }
+
+    // Determine value to send
+    let valToSend = keyDef.val;
+    if (isShiftLocked) {
+       if (keyDef.shiftVal) {
+         valToSend = keyDef.shiftVal;
+       } else if (keyDef.val.length === 1 && keyDef.val.match(/[a-z]/)) {
+         valToSend = keyDef.val.toUpperCase();
+       }
+    } else if (activeKey === 'shift') { 
+       // Handling physical shift held down
+    }
+
+    onKeyClick(valToSend);
+    
+    // Keep Sticky Shift behavior for ease of use on mobile/mouse
+    if (isShiftLocked && keyDef.val !== 'Shift') {
+       // Optional: setIsShiftLocked(false); 
+    }
+  };
+
+  const renderKey = (k: KeyDefinition, index: number) => {
+    // Check if this key is "active"
+    const isShift = activeKey === 'shift';
+    const isActive = 
+        activeKey === k.val || 
+        (k.val.length === 1 && activeKey === k.val.toLowerCase()) ||
+        (k.val === 'Shift' && (activeKey === 'shift' || isShiftLocked)) ||
+        (k.val === 'Enter' && activeKey === 'enter') ||
+        (k.val === 'Backspace' && activeKey === 'backspace');
+
+    const currentLabel = (isShiftLocked || isShift) && k.shiftLabel ? k.shiftLabel : k.label;
+    const isAction = k.type === 'action';
+    
+    // Dimensions
+    // If compact (mobile), we use taller keys (h-16) for better touch accuracy.
+    // We also use percentage-ish width logic via scale, but here we set base sizes.
+    const heightClass = compact ? 'h-[4.5rem]' : 'h-12 md:h-14';
+    
+    // For compact mode, we'll use specific widths to fill space better if not action
+    let widthClass = k.width || 'w-12 md:w-14';
+    
+    // Tight margin for compact mode to fit more keys
+    const marginClass = compact ? 'mx-[2px]' : 'mx-[3px]';
+
+    return (
+      <div 
+        key={`${k.val}-${index}`}
+        onMouseDown={(e) => {
+            e.preventDefault();
+            handleKeyClick(k);
+        }}
+        onTouchStart={(e) => {
+            e.preventDefault(); // Prevent default to stop mouse emulation and scroll
+            handleKeyClick(k);
+        }}
+        className={`relative ${widthClass} ${heightClass} flex justify-center items-center group cursor-pointer ${marginClass} touch-manipulation`}
+      >
+        {/* 1. Base Shadow/Hole */}
+        <div className={`absolute inset-1 bg-black/60 rounded-[40%] blur-[2px] translate-y-2 ${isAction ? 'rounded-md' : ''}`}></div>
+
+        {/* 2. Metal Ring / Plunger */}
+        <div 
+            className={`
+                absolute w-full h-full 
+                ${isAction ? 'rounded-md' : 'rounded-full'}
+                bg-gradient-to-br from-slate-300 via-slate-100 to-slate-400
+                shadow-[0_4px_0_#334155]
+                transition-transform duration-[50ms] ease-out
+                z-10
+                ${isActive ? 'translate-y-[5px] shadow-[0_0_0_#334155]' : 'translate-y-0'}
+            `}
+        >
+            {/* 3. Key Cap */}
+            <div className={`
+                absolute inset-[3px] 
+                ${isAction ? 'rounded-sm' : 'rounded-full'}
+                bg-[#1a1a1a] border-[1px] border-white/20 shadow-inner 
+                flex items-center justify-center overflow-hidden
+            `}>
+                
+                {/* Gloss */}
+                <div className="absolute top-0 w-full h-1/2 bg-white/10 rounded-t-full blur-[1px]"></div>
+
+                {/* Label */}
+                <span className={`
+                    z-10 font-typewriter font-bold text-[#e2e8f0] select-none
+                    ${isAction ? 'text-xs tracking-widest' : 'text-xl'}
+                    ${isActive ? 'text-purple-200' : ''}
+                    transition-colors
+                `}>
+                    {currentLabel}
+                </span>
+            </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-3 mt-2 select-none w-full">
+      {/* Row 1: Numbers */}
+      <div className="flex justify-center">
+        {ROW_NUM.map(renderKey)}
+      </div>
+      
+      {/* Row 2: QWERTY */}
+      <div className="flex justify-center pl-4">
+        {ROW_1.map(renderKey)}
+      </div>
+      
+      {/* Row 3: ASDF */}
+      <div className="flex justify-center pl-6">
+        {ROW_2.map(renderKey)}
+      </div>
+
+      {/* Row 4: ZXCV */}
+      <div className="flex justify-center">
+        {ROW_3.map(renderKey)}
+      </div>
+
+      {/* Space Bar */}
+      <div 
+        onMouseDown={(e) => {
+            e.preventDefault();
+            onKeyClick(' ');
+        }}
+        onTouchStart={(e) => {
+            e.preventDefault();
+            onKeyClick(' ');
+        }}
+        className={`
+          mt-3 w-[90%] max-w-[400px] h-14 rounded-md cursor-pointer z-20
+          bg-gradient-to-b from-zinc-800 to-black
+          border-b-[6px] border-r-[2px] border-l-[2px] border-zinc-900
+          shadow-xl relative overflow-hidden touch-manipulation
+          transition-all duration-[50ms] ease-out
+          active:border-b-0 active:translate-y-[6px] active:shadow-none
+          ${activeKey === ' ' ? 'border-b-0 translate-y-[6px] shadow-none' : ''}
+        `}
+      >
+        {/* Texture/Glare */}
+        <div className="absolute top-1 left-0 w-full h-[2px] bg-white/10"></div>
+        <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+      </div>
+    </div>
+  );
+};
