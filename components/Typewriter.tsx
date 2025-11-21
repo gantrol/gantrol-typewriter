@@ -4,7 +4,7 @@ import { Keyboard } from './Keyboard';
 interface TypewriterProps {
   activeKey: string | null;
   carriageOffset: number;
-  onKeyClick: (key: string) => void;
+  onKeyClick: (key: string, isCtrl?: boolean) => void;
   children: React.ReactNode;
   width: number;
   height: number;
@@ -49,7 +49,7 @@ export const Typewriter: React.FC<TypewriterProps> = ({
 
   // Dynamic Carriage Positioning for Mobile Layouts
   // Calculate the actual visual height of the keyboard assembly to anchor the carriage
-  const keyboardAssemblyHeight = isLandscape ? 280 : 532; // 532 = 140(cover) + 400(deck) - 8(overlap)
+  const keyboardAssemblyHeight = isLandscape ? 280 : 612; // 612 = 140(cover) + 480(deck) - overlap
   const keyboardVisualHeight = keyboardAssemblyHeight * activeScaleKey;
 
   // Anchor carriage to the keyboard top to prevent gaps
@@ -154,10 +154,10 @@ export const Typewriter: React.FC<TypewriterProps> = ({
       {/* Keyboard Deck */}
       <div
         className={`
-            w-[1000px] h-[360px] bg-[#1e1b4b] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-8 border-[#0f0e24] relative
-            ${(!isMobile || !isLandscape) ? 'rounded-[40px] -mt-8 border-b-[16px]' : 'rounded-t-[30px] border-b-0'}
+            w-[1000px] bg-[#1e1b4b] shadow-[0_30px_60px_rgba(0,0,0,0.6)] border-[#0f0e24] relative
+            ${(!isMobile || !isLandscape) ? 'rounded-[40px] -mt-8 border-b-[16px] p-8' : 'rounded-t-[30px] border-b-0 p-4'}
             ${(isMobile && isLandscape) ? 'h-[280px] pt-4' : ''}
-            ${(isMobile && !isLandscape) ? 'h-[400px] pt-8' : ''} /* Add height for mobile portrait to handle tall keys */
+            ${(isMobile && !isLandscape) ? 'h-[480px] pt-6' : 'h-[360px]'} 
           `}
       >
         <Keyboard activeKey={activeKey} onKeyClick={onKeyClick} compact={isMobile} />
